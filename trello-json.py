@@ -76,7 +76,7 @@ for lista in listData:
         for card in cardData[listData.index(lista)]:
             if card is not None:
                 print("   " + str(card['name']))
-                print("     Descripcion: " + str(card['desc']))
+                print("     Descripcion: " + card['desc'])
                 str(card['idChecklists'])
                 idChecklist = str(card['idChecklists'])[2:len(card['idChecklists']) -3]     # Ojo cuidao con la respuesta, que incluye corchetes dentro del string. Además hay que separarlo, puede tener varios checklist.
                 if len(idChecklist) > 3:
@@ -93,3 +93,39 @@ for lista in listData:
 
 
     print("")
+
+
+# Proceso de exportación a archivo
+# Paso 1: abrir el archivo
+f = open("trello-backup.html","w")		# Si no hay archivo lo crea y sino lo reescribe
+
+# Paso 2: cabecera html
+html_inicio = "<HTML><HEAD><title>Trello Backup</title></HEAD><BODY>"
+html_final = "</BODY></HTML>"
+
+# Paso 3: creamos cuerpo de pagina
+html_medio = "<h1>Tablero: " + str(boardName) + "</h1>"
+for lista in listData:
+    html_medio += "<div style=\"border-style:solid;border-width:medium;background-color: coral;margin:10px;\"><h2>Lista: " + str(lista['name']) + "</h2><p>Tarjetas: </p>"
+    if cardData[listData.index(lista)] is not None:
+        for card in cardData[listData.index(lista)]:
+            if card is not None:
+                html_medio += "<div style=\"background-color:white;margin:10px;\"><h3>" + str(card['name']) + "</h3><p>Descripcion:</p><div style=\"background-color:#99ff99;margin:5px;\">" + card['desc'] + "</div>"
+                # str(card['idChecklists'])
+                idChecklist = str(card['idChecklists'])[2:len(card['idChecklists']) -3]     # Ojo cuidao con la respuesta, que incluye corchetes dentro del string. Además hay que separarlo, puede tener varios checklist.
+                if len(idChecklist) > 3:
+                    # print(str(card['idChecklists']).split("'"))       # Prueba que permite ver como devuelve el str
+                    for checklist in trello_json['checklists']:
+                        if checklist['idCard'] == card['id']:
+                            html_medio += "<p>Checklist: " + checklist['name'] + "<br>"
+                            for checkItems in checklist['checkItems']:
+                                if checkItems['state'] == "complete":
+                                    html_medio += "<input type=\"checkbox\" checked> <label>" + str(checkItems['name']) + "</label><br>"
+                                else:
+                                    html_medio += "<input type=\"checkbox\"> <label>" + str(checkItems['name']) + "</label><br>"
+                            html_medio += "</p>"
+                html_medio += "</div>"
+    html_medio += "</div>"
+
+f.write("" + html_inicio + html_medio + html_final)
+f.close()
