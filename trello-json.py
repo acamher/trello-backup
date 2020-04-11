@@ -110,7 +110,7 @@ for lista in listData:
     if cardData[listData.index(lista)] is not None:
         for card in cardData[listData.index(lista)]:
             if card is not None:
-                html_medio += "<div style=\"background-color:white;margin:10px;\"><h3>" + str(card['name']) + "</h3><p>Descripcion:</p><div style=\"background-color:#99ff99;margin:5px;\">" + card['desc'] + "</div>"
+                html_medio += "<div style=\"background-color:white;margin:10px;\"><h3>" + str(card['name']) + "</h3><p>Descripcion:</p><div style=\"background-color:#99ff99;margin:5px;\">" + card['desc'].replace('\n','<br>') + "</div>"
                 # str(card['idChecklists'])
                 idChecklist = str(card['idChecklists'])[2:len(card['idChecklists']) -3]     # Ojo cuidao con la respuesta, que incluye corchetes dentro del string. Además hay que separarlo, puede tener varios checklist.
                 if len(idChecklist) > 3:
