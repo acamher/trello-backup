@@ -2,13 +2,25 @@ import json
 import util
 import sys
 from datetime import datetime
+import argparse
+
+parser = argparse.ArgumentParser()
+parser.add_argument("-d", "--date", help="in mode Actions, process changes in JSON file until the 'date'")
+parser.add_argument("-i", "--input", help="JSON file input", default="trello.json")
+parser.add_argument("-o", "--output", help="HTML file input", default="trello-backup.html")
+parser.add_argument("--dir", help="Directory in batch mode", default=".")
+parser.add_argument("-m", "--movedCards", help="Check cards moved in 'date'", action="store_true")
+parser.add_argument("-l", "--list", help="List Name to check cards moved")
+
+args = parser.parse_args()
 
 flagDate=False
-if len(sys.argv)>1:
+#if len(sys.argv)>1:
+if args.date is not None:
     flagDate=True
     print("Modo filtrado Actions")
 
-with open('trello.json', encoding='UTF-8') as json_file:
+with open(args.input, encoding='UTF-8') as json_file:
     trello_json = json.load(json_file)
 
 # Fase 1: ver cuantas listas hay
@@ -21,17 +33,23 @@ boardName = trello_json['name']
 actionsReconocidas = ["addMemberToCard", #NO
                       "updateCard",  #Sí; sólo actualizar el campo que aparece en old
                       "createCard",   #Sí; si el tablero se copió de otro, pueden no venir los createList correspondientes
+                      "deleteCard", #Pte -------------------------
+                      "moveCardFromBoard", #Pte -------------------------
+                      "moveCardToBoard", #Pte -------------------------
                       "commentCard", #NO
                       "removeMemberFromCard", #NO
                       "updateCheckItemStateOnCard", #Sí
                       "removeChecklistFromCard", #NO
                       "addChecklistToCard", #Sí
+                      "updateChecklist", #Pte ------------------
                       "addMemberToBoard", #NO
                       "updateBoard", #NO
                       "addToOrganizationBoard",#NO
                       "copyBoard", #NO
                       "createList", #Sí
-                      "updateList"] #Sí; data.list.closed=true es borrado y no hay que imprimirla
+                      "updateList", #Sí; data.list.closed=true es borrado y no hay que imprimirla
+                      "enablePlugin"] #NO
+
 for action in trello_json['actions']:
     tipo = action['type']
     if action['type'] not in actionsReconocidas:
@@ -39,7 +57,7 @@ for action in trello_json['actions']:
 
 if  flagDate:
     #Replay de los actions , sólo hasta la fecha seleccionada
-    d_argument=datetime.strftime(datetime.strptime(sys.argv[1],"%d%m%Y"),"%Y%m%d")
+    d_argument=datetime.strftime(datetime.strptime(args.date,"%d%m%Y"),"%Y%m%d")
     for action in reversed(trello_json['actions']):
         d_action=datetime.strftime(util.convertDate(action['date']),"%Y%m%d")
         if d_action<=d_argument:
@@ -145,7 +163,7 @@ else:
 
 # Proceso de exportación a archivo
 # Paso 1: abrir el archivo
-f = open("trello-backup.html","w")		# Si no hay archivo lo crea y sino lo reescribe
+f = open(args.output,"w")		# Si no hay archivo lo crea y sino lo reescribe
 
 # Paso 2: cabecera html
 html_inicio = "<HTML><HEAD><title>Trello Backup</title></HEAD><BODY>"
