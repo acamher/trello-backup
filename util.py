@@ -6,41 +6,46 @@ def updateOrcreateCardInList(card,cardListid,data,listData,cardData):
     flagUpdate=False
     flagReordenar=False
     campos = []
+    if ( not "name" in data['list']):
+        # vendría de un moveCardFromBoard -> no hacemos nada porque también se hace un CreateCard de la misma card
+        pass
+    else:
+        if "idChecklists" not in card: card["idChecklists"]=[]
+        if "desc" not in card: card["desc"]=""
 
-    if "idChecklists" not in card: card["idChecklists"]=[]
-    if "desc" not in card: card["desc"]=""
-
-    if "old" in data:
-        for campo in data['old']:
-            flagUpdate=True
-            campos.append(campo)
-    for list in listData:
-        if list['id'] == cardListid:
-            if flagUpdate: #updateCard
-                for cardItem in cardData[n]: #localizar la card
-                    if cardItem['id'] == card['id']:
-                        for campo in campos: #actualizamos todos los campos updates
-                            cardItem[campo]=card[campo]
-                            if campo == "pos":
-                                    flagReordenar=True
-            else: #createCard
-                if cardData[n] == None:
-                    card["pos"] = 65535
-                    cardData[n] = [card]
-                else:
-                    ultima_pos = cardData[n][-1]['pos']
-                    card['pos'] = ultima_pos + 65535 + 1
-                    cardData[n].extend([card])
-            flagEncontrado=True
-        n += 1
-    if not flagEncontrado:
-        if "list" in data:
-            listData.append(data['list'])
-            cardData.append(None)
-            card["pos"] = 65535
-            cardData[n] = [card]
-        else:
-            pass
+        if "old" in data:
+            for campo in data['old']:
+                flagUpdate=True
+                campos.append(campo)
+        for list in listData:
+            if list['id'] == cardListid:
+                if flagUpdate: #updateCard
+                    for cardItem in cardData[n]: #localizar la card
+                        if cardItem['id'] == card['id']:
+                            for campo in campos: #actualizamos todos los campos updates
+                                cardItem[campo]=card[campo]
+                                if campo == "pos":
+                                        flagReordenar=True
+                else: #createCard
+                    if cardData[n] == None:
+                        card["pos"] = 65535
+                        cardData[n] = [card]
+                    else:
+                        ultima_pos = 0
+                        if len(cardData[n]) > 0:
+                            ultima_pos = cardData[n][-1]['pos']
+                        card['pos'] = ultima_pos + 65535 + 1
+                        cardData[n].extend([card])
+                flagEncontrado=True
+            n += 1
+        if not flagEncontrado:
+            if "list" in data:
+                listData.append(data['list'])
+                cardData.append(None)
+                card["pos"] = 65535
+                cardData[n] = [card]
+            else:
+                pass
     return flagReordenar
 
 def updateOrcreateList(data,listData,cardData):
@@ -48,9 +53,10 @@ def updateOrcreateList(data,listData,cardData):
     flagEncontrado=False
     flagUpdate=False
     campos = []
-    for campo in data['old']:
-        flagUpdate=True
-        campos.append(campo)
+    if "old" in data:
+        for campo in data['old']:
+            flagUpdate=True
+            campos.append(campo)
     for list in listData:
         if list['id'] == data['list']['id']:
             if flagUpdate: #updateList
@@ -61,41 +67,48 @@ def updateOrcreateList(data,listData,cardData):
             flagEncontrado=True
         n += 1
     if not flagEncontrado: #createList
-        listData.extend(data['list'])
+        listData.append(data['list'])
         cardData.append(None)
+        cardData[n] = []
 
 def moveCardInList(data,listData, cardData):
     card2move = None
     cardDataBefore = []
     flagEncontradoOld=False
-    flagcreateCardInNew=False
+    flagcreateCardInNewList=False
     #"listBefore":{"id":"5e7e4e3e1b2ffc59c21438a3","name":"Done"},"listAfter":{"id":
 
+  #Se quita de la lista original
     n = 0
     for list in listData:
         if list['id'] == data['listBefore']['id']:
             for cardItem in cardData[n]: #localizar la card
                 if cardItem['id'] == data['card']['id']:
                     card2move = cardItem
+                    flagEncontradoOld=True
                 else:
-                    cardDataBefore.append(cardItem)
-            flagEncontradoOld=True
+                    cardDataBefore.extend([cardItem])
             cardData[n] = cardDataBefore
         n += 1
 
-    if flagEncontradoOld:
-        n = 0
-        flagcreateCardInNew=True
-        for list in listData:
-            if list['id'] == data['listAfter']['id']:
-                if cardData[n] == None:
-                    cardData[n] = [card2move]
-                else:
-                    cardData[n].extend([card2move])
-                flagcreateCardInNew=False
-            n += 1
+    if not flagEncontradoOld:
+        #la card es nueva
+        card2move = data['card']
 
-    if flagcreateCardInNew:
+    #Se mete en la lista destino
+    n = 0
+    flagcreateCardInNewList=True
+    for list in listData:
+        if list['id'] == data['listAfter']['id']:
+            if cardData[n] == None:
+                cardData[n] = [card2move]
+            else:
+                cardData[n].extend([card2move])
+            flagcreateCardInNewList=False
+        n += 1
+
+    # Si no se encuentra es que la la lista destino es nueva
+    if flagcreateCardInNewList:
         if "listAfter" in data:
             listData.append(data['listAfter'])
             cardData.append(None)
@@ -130,6 +143,17 @@ def updateCheckItemState(checklistId,checkitem,checklistsList):
             for item in checklist['checkItems']:
                 if item['id'] == checkitem['id']:
                         item['state'] = checkitem['state']
+
+def deleteCard(card,cardListid,listData,cardData):
+    n = 0   # Numero de lista
+    for list in listData:
+        if list['id'] == cardListid:
+            element = 0 # numero de card en la lista
+            for cardItem in cardData[n]: #localizar la card
+                if cardItem['id'] == card['id']:
+                    del cardData[n][element]
+                element = element +1
+        n += 1
 
 def convertDate(d):
     if d.endswith('Z'):

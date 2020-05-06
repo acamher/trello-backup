@@ -33,9 +33,9 @@ boardName = trello_json['name']
 actionsReconocidas = ["addMemberToCard", #NO
                       "updateCard",  #Sí; sólo actualizar el campo que aparece en old
                       "createCard",   #Sí; si el tablero se copió de otro, pueden no venir los createList correspondientes
-                      "deleteCard", #Pte -------------------------
-                      "moveCardFromBoard", #Pte -------------------------
-                      "moveCardToBoard", #Pte -------------------------
+                      "deleteCard", #Sí
+                      "moveCardFromBoard", #Sí
+                      "moveCardToBoard", #Sí
                       "commentCard", #NO
                       "removeMemberFromCard", #NO
                       "updateCheckItemStateOnCard", #Sí
@@ -74,6 +74,12 @@ if  flagDate:
                 pass
             elif action['type']=="updateCheckItemStateOnCard":
                 util.updateCheckItemState(action['data']['checklist']['id'],action['data']['checkItem'],checklistsList)
+            elif action['type']=="moveCardFromBoard":
+                util.deleteCard(action['data']['card'],action['data']['list']['id'],listData,cardData)
+            elif action['type']=="deleteCard":
+                util.deleteCard(action['data']['card'],action['data']['list']['id'],listData,cardData)
+            elif action['type']=="moveCardToBoard":
+                util.updateOrcreateCardInList(action['data']['card'],action['data']['list']['id'],action['data'],listData,cardData)
 
 
     for listCards in cardData:
