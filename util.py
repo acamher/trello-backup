@@ -94,7 +94,7 @@ def moveCardInList(data,listData, cardData):
     if not flagEncontradoOld:
         #la card es nueva
         card2move = data['card']
-
+        card2move["pos"] = 65535
     #Se mete en la lista destino
     n = 0
     flagcreateCardInNewList=True
@@ -103,6 +103,9 @@ def moveCardInList(data,listData, cardData):
             if cardData[n] == None:
                 cardData[n] = [card2move]
             else:
+                if len(cardData[n]) > 0:
+                    ultima_pos = cardData[n][-1]['pos']
+                    card2move['pos'] = ultima_pos + 65535 + 1
                 cardData[n].extend([card2move])
             flagcreateCardInNewList=False
         n += 1

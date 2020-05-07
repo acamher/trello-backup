@@ -48,7 +48,10 @@ actionsReconocidas = ["addMemberToCard", #NO
                       "copyBoard", #NO
                       "createList", #Sí
                       "updateList", #Sí; data.list.closed=true es borrado y no hay que imprimirla
-                      "enablePlugin"] #NO
+                      "enablePlugin", #NO
+                      "copyCard", #Pte -----------------------------------------
+                      "updateCustomFieldItem"  #NO
+                      "createCustomField"] #NO
 
 for action in trello_json['actions']:
     tipo = action['type']
@@ -80,6 +83,10 @@ if  flagDate:
                 util.deleteCard(action['data']['card'],action['data']['list']['id'],listData,cardData)
             elif action['type']=="moveCardToBoard":
                 util.updateOrcreateCardInList(action['data']['card'],action['data']['list']['id'],action['data'],listData,cardData)
+            elif action['type']=="copyCard":
+                util.updateOrcreateCardInList(action['data']['card'],action['data']['list']['id'],action['data'],listData,cardData)
+            else:
+                pass
 
 
     for listCards in cardData:
@@ -178,26 +185,31 @@ html_final = "</BODY></HTML>"
 # Paso 3: creamos cuerpo de pagina
 html_medio = "<h1>Tablero: " + str(boardName) + "</h1>"
 for lista in listData:
-    html_medio += "<div style=\"border-style:solid;border-width:medium;background-color: coral;margin:10px;\"><h2>Lista: " + str(lista['name']) + "</h2>"
-    if cardData[listData.index(lista)] is not None:
-        for card in cardData[listData.index(lista)]:
-            if card is not None:
-                html_medio += "<div style=\"background-color:white;margin:10px;\"><h3>" + str(card['name']) + "</h3><p>Descripcion:</p><div style=\"background-color:#99ff99;margin:5px;\">" + card['desc'].replace('\n','<br>') + "</div>"
-                # str(card['idChecklists'])
-                idChecklist = str(card['idChecklists'])[2:len(card['idChecklists']) -3]     # Ojo cuidao con la respuesta, que incluye corchetes dentro del string. Además hay que separarlo, puede tener varios checklist.
-                if len(idChecklist) > 3:
-                    # print(str(card['idChecklists']).split("'"))       # Prueba que permite ver como devuelve el str
-                    for checklist in checklistsList:
-                        if checklist['idCard'] == card['id']:
-                            html_medio += "<p>Checklist: " + checklist['name'] + "<br>"
-                            for checkItems in checklist['checkItems']:
-                                if checkItems['state'] == "complete":
-                                    html_medio += "<input type=\"checkbox\" checked> <label>" + str(checkItems['name']) + "</label><br>"
-                                else:
-                                    html_medio += "<input type=\"checkbox\"> <label>" + str(checkItems['name']) + "</label><br>"
-                            html_medio += "</p>"
-                html_medio += "</div>"
-    html_medio += "</div>"
+    if "closed" not in lista or lista['closed']!=True:
+        html_medio += "<div style=\"border-style:solid;border-width:medium;background-color: coral;margin:10px;\"><h2>Lista: " + str(lista['name']) + "</h2>"
+        if cardData[listData.index(lista)] is not None:
+            for card in cardData[listData.index(lista)]:
+                if card is not None and ("closed" not in card or card['closed']!=True):
+                    desc=""
+                    if "desc" in card:
+                        desc=card['desc']
+                    html_medio += "<div style=\"background-color:white;margin:10px;\"><h3>" + str(card['name']) + "</h3><p>Descripcion:</p><div style=\"background-color:#99ff99;margin:5px;\">" + desc.replace('\n','<br>') + "</div>"
+                    # str(card['idChecklists'])
+                    if "idChecklists" in card and len(card['idChecklists']) > 0:
+                        idChecklist = str(card['idChecklists'])[2:len(card['idChecklists']) -3]     # Ojo cuidao con la respuesta, que incluye corchetes dentro del string. Además hay que separarlo, puede tener varios checklist.
+                        if len(idChecklist) > 3:
+                            # print(str(card['idChecklists']).split("'"))       # Prueba que permite ver como devuelve el str
+                            for checklist in checklistsList:
+                                if checklist['idCard'] == card['id']:
+                                    html_medio += "<p>Checklist: " + checklist['name'] + "<br>"
+                                    for checkItems in checklist['checkItems']:
+                                        if checkItems['state'] == "complete":
+                                            html_medio += "<input type=\"checkbox\" checked> <label>" + str(checkItems['name']) + "</label><br>"
+                                        else:
+                                            html_medio += "<input type=\"checkbox\"> <label>" + str(checkItems['name']) + "</label><br>"
+                                    html_medio += "</p>"
+                    html_medio += "</div>"
+        html_medio += "</div>"
 
 f.write("" + html_inicio + html_medio + html_final)
 f.close()
