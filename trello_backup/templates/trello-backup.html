@@ -1,0 +1,24 @@
+<HTML>
+<HEAD><title>Trello Backup</title></HEAD>
+<BODY>
+<h1>Tablero: {{boardName}}</h1>
+    {% for lista in listData %} {%  if "closed" not in lista or lista['closed']!=True %}
+        <div style=border-style:solid;border-width:medium;background-color:coral;margin:10px;>
+            <h2>Lista: {{lista.name}}</h2>
+            {% if cardData[listData.index(lista)] is defined %}{% for card in cardData[listData.index(lista)] %} {% if card is defined and ("closed" not in card or card['closed']!=True) %}
+                <div style=background-color:white;margin:10px;>
+                    <h3>{{card.name}}</h3>
+                    <p>Descripcion:</p>
+                    <div style=background-color:#99ff99;margin:5px;> {% if "desc" in card%}{% autoescape false %}{{card['desc'] | replace("\n", "<br/>")}}{% endautoescape %}{% endif %} </div>
+                    {% if "idChecklists" in card %}{% for checklist in checklistsList %}{% if checklist['idCard'] == card['id'] %}
+                        <p>Checklist: {{checklist['name']}}<br>
+                            {% for checkItems in checklist['checkItems'] %}
+                                <input type=checkbox {% if checkItems['state'] == 'complete' %}checked{% endif%}> <label> {{checkItems['name']}}</label><br>
+                            {% endfor %}
+                        </p>
+                    {% endif %}{% endfor %}{% endif %}
+                </div>
+        {% endif %} {% endfor %} {% endif %}
+    </div>
+{% endif %} {% endfor %}
+</BODY></HTML>

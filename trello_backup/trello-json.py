@@ -1,6 +1,5 @@
 import json
-import util
-import sys
+from trello_backup import util
 from datetime import datetime
 import argparse
 
@@ -62,29 +61,29 @@ if  flagDate:
     #Replay de los actions , sólo hasta la fecha seleccionada
     d_argument=datetime.strftime(datetime.strptime(args.date,"%d%m%Y"),"%Y%m%d")
     for action in reversed(trello_json['actions']):
-        d_action=datetime.strftime(util.convertDate(action['date']),"%Y%m%d")
+        d_action=datetime.strftime(util.convertDate(action['date']), "%Y%m%d")
         if d_action<=d_argument:
             if action['type']=="createCard" or action['type']=="updateCard":
                 if 'listBefore' in action['data']:
-                    util.moveCardInList(action['data'],listData,cardData)
+                    util.moveCardInList(action['data'], listData, cardData)
                 else:
-                    util.updateOrcreateCardInList(action['data']['card'],action['data']['list']['id'],action['data'],listData,cardData)
+                    util.updateOrcreateCardInList(action['data']['card'], action['data']['list']['id'], action['data'], listData, cardData)
             elif action['type']=="createList" or action['type']=="updateList":
-                util.updateOrcreateList(action['data'],listData,cardData)
+                util.updateOrcreateList(action['data'], listData, cardData)
             elif action['type']=="addChecklistToCard":
-                util.createCheckListInCard(action['data']['card']['id'],action['data']['checklist']['id'],trello_json['checklists'],cardData,checklistsList)
+                util.createCheckListInCard(action['data']['card']['id'], action['data']['checklist']['id'], trello_json['checklists'], cardData, checklistsList)
             elif action['type']=="removeChecklistFromCard":
                 pass
             elif action['type']=="updateCheckItemStateOnCard":
-                util.updateCheckItemState(action['data']['checklist']['id'],action['data']['checkItem'],checklistsList)
+                util.updateCheckItemState(action['data']['checklist']['id'], action['data']['checkItem'], checklistsList)
             elif action['type']=="moveCardFromBoard":
-                util.deleteCard(action['data']['card'],action['data']['list']['id'],listData,cardData)
+                util.deleteCard(action['data']['card'], action['data']['list']['id'], listData, cardData)
             elif action['type']=="deleteCard":
-                util.deleteCard(action['data']['card'],action['data']['list']['id'],listData,cardData)
+                util.deleteCard(action['data']['card'], action['data']['list']['id'], listData, cardData)
             elif action['type']=="moveCardToBoard":
-                util.updateOrcreateCardInList(action['data']['card'],action['data']['list']['id'],action['data'],listData,cardData)
+                util.updateOrcreateCardInList(action['data']['card'], action['data']['list']['id'], action['data'], listData, cardData)
             elif action['type']=="copyCard":
-                util.updateOrcreateCardInList(action['data']['card'],action['data']['list']['id'],action['data'],listData,cardData)
+                util.updateOrcreateCardInList(action['data']['card'], action['data']['list']['id'], action['data'], listData, cardData)
             else:
                 pass
 
@@ -106,7 +105,7 @@ else:
     # Fase 2: conseguir hacer un array de tarjetas
 
     for card in trello_json['cards']:
-        util.updateOrcreateCardInList(card,card['idList'],[],listData,cardData)
+        util.updateOrcreateCardInList(card, card['idList'], [], listData, cardData)
 
 
     # Imprime las tarjetas de forma resumida
@@ -178,38 +177,12 @@ else:
 # Paso 1: abrir el archivo
 f = open(args.output,"w")		# Si no hay archivo lo crea y sino lo reescribe
 
-# Paso 2: cabecera html
-html_inicio = "<HTML><HEAD><title>Trello Backup</title></HEAD><BODY>"
-html_final = "</BODY></HTML>"
-
-# Paso 3: creamos cuerpo de pagina
-html_medio = "<h1>Tablero: " + str(boardName) + "</h1>"
-for lista in listData:
-    if "closed" not in lista or lista['closed']!=True:
-        html_medio += "<div style=\"border-style:solid;border-width:medium;background-color: coral;margin:10px;\"><h2>Lista: " + str(lista['name']) + "</h2>"
-        if cardData[listData.index(lista)] is not None:
-            for card in cardData[listData.index(lista)]:
-                if card is not None and ("closed" not in card or card['closed']!=True):
-                    desc=""
-                    if "desc" in card:
-                        desc=card['desc']
-                    html_medio += "<div style=\"background-color:white;margin:10px;\"><h3>" + str(card['name']) + "</h3><p>Descripcion:</p><div style=\"background-color:#99ff99;margin:5px;\">" + desc.replace('\n','<br>') + "</div>"
-                    # str(card['idChecklists'])
-                    if "idChecklists" in card and len(card['idChecklists']) > 0:
-                        idChecklist = str(card['idChecklists'])[2:len(card['idChecklists']) -3]     # Ojo cuidao con la respuesta, que incluye corchetes dentro del string. Además hay que separarlo, puede tener varios checklist.
-                        if len(idChecklist) > 3:
-                            # print(str(card['idChecklists']).split("'"))       # Prueba que permite ver como devuelve el str
-                            for checklist in checklistsList:
-                                if checklist['idCard'] == card['id']:
-                                    html_medio += "<p>Checklist: " + checklist['name'] + "<br>"
-                                    for checkItems in checklist['checkItems']:
-                                        if checkItems['state'] == "complete":
-                                            html_medio += "<input type=\"checkbox\" checked> <label>" + str(checkItems['name']) + "</label><br>"
-                                        else:
-                                            html_medio += "<input type=\"checkbox\"> <label>" + str(checkItems['name']) + "</label><br>"
-                                    html_medio += "</p>"
-                    html_medio += "</div>"
-        html_medio += "</div>"
-
-f.write("" + html_inicio + html_medio + html_final)
+from jinja2 import Environment, PackageLoader, select_autoescape
+env = Environment(
+    loader=PackageLoader('trello_backup', 'templates'),
+    autoescape=select_autoescape(['html', 'xml'])
+)
+tm = env.get_template('trello-backup.html')
+html_file = tm.render(boardName=str(boardName),listData=listData,cardData=cardData,checklistsList=checklistsList)
+f.write(html_file)
 f.close()
