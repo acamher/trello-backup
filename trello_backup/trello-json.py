@@ -49,8 +49,9 @@ actionsReconocidas = ["addMemberToCard", #NO
                       "updateList", #Sí; data.list.closed=true es borrado y no hay que imprimirla
                       "enablePlugin", #NO
                       "copyCard", #Pte -----------------------------------------
-                      "updateCustomFieldItem"  #NO
-                      "createCustomField"] #NO
+                      "updateCustomFieldItem",  #NO
+                      "createCustomField", #NO
+                      "createBoard"] #NO
 
 for action in trello_json['actions']:
     tipo = action['type']
@@ -84,6 +85,8 @@ if  flagDate:
                 util.updateOrcreateCardInList(action['data']['card'], action['data']['list']['id'], action['data'], listData, cardData)
             elif action['type']=="copyCard":
                 util.updateOrcreateCardInList(action['data']['card'], action['data']['list']['id'], action['data'], listData, cardData)
+            elif action['type']=="commentCard":
+                util.addcommentCard(action['data']['card']['id'], action['data']['list']['id'], action['data']['text'], listData, cardData)
             else:
                 pass
 

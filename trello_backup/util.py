@@ -158,6 +158,20 @@ def deleteCard(card,cardListid,listData,cardData):
                 element = element +1
         n += 1
 
+def addcommentCard(cardId, cardListid, text, listData, cardData):
+    n = 0   # Numero de lista
+    for list in listData:
+        if list['id'] == cardListid:
+            element = 0 # numero de card en la lista
+            for cardItem in cardData[n]: #localizar la card
+                if cardItem['id'] == cardId:
+                    if "comments" not in cardData[n][element]:
+                        cardData[n][element]['comments']=[text]
+                    else:
+                        cardData[n][element]['comments'].insert(0,text)
+                element = element +1
+        n += 1
+
 def convertDate(d):
     if d.endswith('Z'):
         d = d[:-1] + '+00:00'
