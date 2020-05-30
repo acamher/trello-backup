@@ -76,11 +76,12 @@ th {
                  <div class="card">
                      <div class="card-header card_header">{{card.name}}</div>
                      <div class="card-body">
-                         <p>Descripcion:</p>
-                         <div style=background-color:#99ff99;margin:5px;> {% if "desc" in card%}{% autoescape false %}{{card['desc'] | replace("\n", "<br/>")}}{% endautoescape %}{% endif %} </div>
-                         <div>
+                         {% if "desc" in card%}{% if card['desc'] | length > 0 %}
+                             <p><b>Descripcion:</b></p>
+                             <div style=background-color:#99ff99;margin:5px;> {% autoescape false %}{{card['desc'] | replace("\n", "<br/>")}}{% endautoescape %}</div>
+                         {% endif %}{% endif %}
                          {% if "idChecklists" in card %}{% for checklist in checklistsList %}{% if checklist['idCard'] == card['id'] %}
-                             <p>Checklist: {{checklist['name']}}<br>
+                             <p><b>Checklist: {{checklist['name']}}</b><br>
                              <div style=background-color:#92a8d1;margin:5px;><table>
                                  {% for checkItems in checklist['checkItems'] %}
                                      <tr><td valign="top" style=width:3%;><input type=checkbox {% if checkItems['state'] == 'complete' %}checked{% endif%}></td><td style=width:97%;> <label> {{checkItems['name']}}</label><br></td></tr>
@@ -88,7 +89,15 @@ th {
                              </table></div>
                              </p>
                          {% endif %}{% endfor %}{% endif %}
-                         </div>
+                         {% if "comments" in card %}
+                            <br><p><b>Acciones: </b><br>
+                            <div style=background-color:#CEF6CE;margin:5px;><table>
+                                {% for comment in card['comments'] %}
+                                    <tr><td valign="top" style=width:3%;>{{loop.revindex}}</td><td style=width:97%;>{% autoescape false %}{{comment | replace("\n", "<br>")}}{% endautoescape %}<br></td></tr>
+                                {% endfor %}
+                            </table></div>
+                            </p>
+                         {% endif %}
                      </div>
                  </div><br>
              {% endif %} {% endfor %} {% endif %}
