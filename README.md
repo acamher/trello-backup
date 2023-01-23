@@ -7,10 +7,10 @@ Translate trello.json in a HTML file for backup pourpose, via command line
 4. HTML file will be created in the python program folder
 4. Save HTML result in your backup folder
 
-###Usage
+### Usage
 trello-json.py [-h] [-d DATE] [-i INPUT] [-o OUTPUT] [--dir DIR] [-m] [-l LIST]
 
-####Arguments
+#### Arguments
 **date** - To process changes until the 'date'. In the form of 'DDMMYYYY' (%d%m%Y)
 
 optional arguments:<br/>
